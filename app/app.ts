@@ -66,6 +66,8 @@ console.log("Example Inputs:\n", "UK:AAB123456789:Gloves:125:Mask:70");
 console.log("Example Output:\n", "19260:30:100 0:25");
 console.log("Example Inputs:\n", "UK:Gloves:50:Mask:150");
 console.log("Example Output:\n", "18500:0:50 50:50");
+console.log("Example Inputs:\n", "UK:Gloves:250:Mask:150");
+console.log("Example Output:\n", "OUT OF STOCK:100:100 100:50");
 
 let isPassportCountry: Country | undefined = undefined;
 const initInput = () => {
@@ -73,6 +75,7 @@ const initInput = () => {
   readline.question("", async (input: any) => {
     let glovesCount = 0;
     let maskCount = 0;
+    let countTotel = 0;
     const allInputs = input.replace(/\s/g, "").split(":");
     console.log(allInputs);
     if (allInputs.length <= 4) {
@@ -99,8 +102,20 @@ const initInput = () => {
     }
 
     let shippingCharge: number = 0;
-
+    const totalMaskStock = state.germany_inventory.mask + state.uk_inventory.mask;
+    const totalGlovesStock = state.germany_inventory.gloves + state.uk_inventory.gloves;
+    let isOutOfStock = false;
+    const outOfStock = "OUT OF STOCK";
+    if(Math.sign(totalMaskStock - inputValues.mask) === -1 || Math.sign(totalGlovesStock - inputValues.gloves) === -1){
+      console.log(
+        `${outOfStock}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
+      );
+      initInput();
+      return;
+    }
     if (inputValues.purchase_country == "uk") {
+
+      const checkOutofStock = (Math.sign(totalMaskStock - inputValues.gloves)  - Math.sign(state.germany_inventory.mask - inputValues.mask))
       const glovesStockCount: number =
         state.uk_inventory.gloves - inputValues.gloves;
       const maskStockCount: number = state.uk_inventory.mask - inputValues.mask;
@@ -126,65 +141,40 @@ const initInput = () => {
       } else {
         state.uk_inventory.gloves = glovesStockCount;
       }
-      
+
       glovesCount =
-    glovesCount + inputValues.gloves * state.uk_inventory.gloves_prise;
-  maskCount = maskCount + inputValues.mask * state.uk_inventory.mask_prise;
-  state.sale_prise = glovesCount + maskCount + shippingCharge;
-    console.log("Your Input ", inputValues);
-    console.log("new state ", state);
-    console.log(
-      `${state.sale_prise}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
-    );
-
-    } else {
-      state.germany_inventory.gloves -= inputValues.gloves;
-      state.germany_inventory.mask -= inputValues.mask;
-      console.log(state.germany_inventory.mask);
-      console.log(state.germany_inventory.gloves);
-      glovesCount = inputValues.gloves * state.germany_inventory.gloves_prise;
-      maskCount = inputValues.mask * state.germany_inventory.mask_prise;
+        glovesCount + inputValues.gloves * state.uk_inventory.gloves_prise;
+      maskCount = maskCount + inputValues.mask * state.uk_inventory.mask_prise;
       state.sale_prise = glovesCount + maskCount + shippingCharge;
-
-      const glovesStockCount: number =
-        state.germany_inventory.gloves - inputValues.gloves;
-      const maskStockCount: number = state.germany_inventory.mask - inputValues.mask;
+      console.log(
+        `${state.sale_prise}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
+      );
+    } else {
+      //germany
+      let [base, decimal] = (inputValues.gloves / 10).toString().split(".");
+      const reduceQuantityFromUk = parseInt(base) * 10;
+      state.uk_inventory.gloves -= reduceQuantityFromUk;
+      countTotel += reduceQuantityFromUk * state.uk_inventory.gloves_prise;
+      shippingCharge = state.shipping_charge * parseInt(base);
+      if (decimal != "NaN") {
+        state.germany_inventory.gloves -= parseInt(decimal);
+        countTotel += parseInt(decimal) * state.germany_inventory.gloves_prise;
+      }
       if (isPassportCountry == "uk") {
-        state.shipping_charge -=
+        shippingCharge =
+          state.shipping_charge -
           (state.shipping_discount / 100) * state.shipping_charge;
-      }
-      if (maskStockCount < 0) {
-        maskCount = await getStock(Country.uk, maskStockCount, "mask");
-        state.germany_inventory.mask = 0;
-        shippingCharge = state.shipping_charge;
+        countTotel += state.uk_inventory.mask_prise * inputValues.mask;
+        state.uk_inventory.mask -= inputValues.mask;
       } else {
-        state.germany_inventory.mask = maskStockCount;
+        countTotel += state.germany_inventory.mask_prise * inputValues.mask;
+        state.germany_inventory.mask -= inputValues.mask;
       }
-      if (glovesStockCount < 0) {
-        glovesCount = await getStock(
-          Country.uk,
-          glovesStockCount,
-          "gloves"
-        );
-        console.log(glovesCount);
-        state.germany_inventory.gloves = 0;
-        shippingCharge = state.shipping_charge;
-      } else {
-        state.germany_inventory.gloves = glovesStockCount;
-      }
-     
-glovesCount =
-    glovesCount + inputValues.gloves * state.germany_inventory.gloves_prise;
-  maskCount = maskCount + inputValues.mask * state.germany_inventory.mask_prise;
-  state.sale_prise = glovesCount + maskCount + shippingCharge;
-    console.log("Your Input ", inputValues);
-    console.log("new state ", state);
-    console.log(
-      `${state.sale_prise}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
-    );
-      
+      state.sale_prise = countTotel + shippingCharge;
+      console.log(
+        `${state.sale_prise}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
+      );
     }
-    
     readline.close();
   });
 };

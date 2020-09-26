@@ -87,12 +87,13 @@ var isPassportCountry = undefined;
 var initInput = function () {
     console.log("Enter Input: ");
     readline.question("", function (input) { return __awaiter(void 0, void 0, void 0, function () {
-        var glovesCount, maskCount, allInputs, passportNumber, shippingCharge, glovesStockCount, maskStockCount, glovesStockCount, maskStockCount;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
+        var glovesCount, maskCount, countTotel, allInputs, passportNumber, shippingCharge, totalMaskStock, totalGlovesStock, isOutOfStock, outOfStock, checkOutofStock, glovesStockCount, maskStockCount, _a, base, decimal, reduceQuantityFromUk;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
                     glovesCount = 0;
                     maskCount = 0;
+                    countTotel = 0;
                     allInputs = input.replace(/\s/g, "").split(":");
                     console.log(allInputs);
                     if (allInputs.length <= 4) {
@@ -105,16 +106,16 @@ var initInput = function () {
                     if (!(passportNumber.length <= 7)) return [3 /*break*/, 2];
                     return [4 /*yield*/, getInputItems(allInputs, 1)];
                 case 1:
-                    _a.sent();
+                    _b.sent();
                     return [3 /*break*/, 5];
                 case 2: return [4 /*yield*/, getInputItems(allInputs, 2)];
                 case 3:
-                    _a.sent();
+                    _b.sent();
                     return [4 /*yield*/, checkCountryPassport(passportNumber)];
                 case 4:
-                    isPassportCountry = _a.sent();
+                    isPassportCountry = _b.sent();
                     inputValues.passport_country = isPassportCountry;
-                    _a.label = 5;
+                    _b.label = 5;
                 case 5:
                     console.log(inputValues.purchase_country);
                     console.log(inputValues.purchase_country in Country);
@@ -124,7 +125,16 @@ var initInput = function () {
                         return [2 /*return*/];
                     }
                     shippingCharge = 0;
+                    totalMaskStock = state.germany_inventory.mask + state.uk_inventory.mask;
+                    totalGlovesStock = state.germany_inventory.gloves + state.uk_inventory.gloves;
+                    isOutOfStock = false;
+                    outOfStock = "OUT OF STOCK";
+                    if (Math.sign(totalMaskStock - inputValues.mask) === -1 || Math.sign(totalGlovesStock - inputValues.gloves) === -1) {
+                        console.log(outOfStock + ":" + state.uk_inventory.mask + ":" + state.germany_inventory.mask + " " + state.uk_inventory.gloves + ":" + state.germany_inventory.gloves);
+                        return [2 /*return*/];
+                    }
                     if (!(inputValues.purchase_country == "uk")) return [3 /*break*/, 12];
+                    checkOutofStock = (Math.sign(totalMaskStock - inputValues.gloves) - Math.sign(state.germany_inventory.mask - inputValues.mask));
                     glovesStockCount = state.uk_inventory.gloves - inputValues.gloves;
                     maskStockCount = state.uk_inventory.mask - inputValues.mask;
                     if (isPassportCountry == "germany") {
@@ -134,79 +144,56 @@ var initInput = function () {
                     if (!(maskStockCount < 0)) return [3 /*break*/, 7];
                     return [4 /*yield*/, getStock(Country.germany, maskStockCount, "mask")];
                 case 6:
-                    maskCount = _a.sent();
+                    maskCount = _b.sent();
                     state.uk_inventory.mask = 0;
                     shippingCharge = state.shipping_charge;
                     return [3 /*break*/, 8];
                 case 7:
                     state.uk_inventory.mask = maskStockCount;
-                    _a.label = 8;
+                    _b.label = 8;
                 case 8:
                     if (!(glovesStockCount < 0)) return [3 /*break*/, 10];
                     return [4 /*yield*/, getStock(Country.germany, glovesStockCount, "gloves")];
                 case 9:
-                    glovesCount = _a.sent();
+                    glovesCount = _b.sent();
                     state.uk_inventory.gloves = 0;
                     shippingCharge = state.shipping_charge;
                     return [3 /*break*/, 11];
                 case 10:
                     state.uk_inventory.gloves = glovesStockCount;
-                    _a.label = 11;
+                    _b.label = 11;
                 case 11:
                     glovesCount =
                         glovesCount + inputValues.gloves * state.uk_inventory.gloves_prise;
                     maskCount = maskCount + inputValues.mask * state.uk_inventory.mask_prise;
                     state.sale_prise = glovesCount + maskCount + shippingCharge;
-                    console.log("Your Input ", inputValues);
-                    console.log("new state ", state);
                     console.log(state.sale_prise + ":" + state.uk_inventory.mask + ":" + state.germany_inventory.mask + " " + state.uk_inventory.gloves + ":" + state.germany_inventory.gloves);
-                    return [3 /*break*/, 19];
+                    return [3 /*break*/, 13];
                 case 12:
-                    state.germany_inventory.gloves -= inputValues.gloves;
-                    state.germany_inventory.mask -= inputValues.mask;
-                    console.log(state.germany_inventory.mask);
-                    console.log(state.germany_inventory.gloves);
-                    glovesCount = inputValues.gloves * state.germany_inventory.gloves_prise;
-                    maskCount = inputValues.mask * state.germany_inventory.mask_prise;
-                    state.sale_prise = glovesCount + maskCount + shippingCharge;
-                    glovesStockCount = state.germany_inventory.gloves - inputValues.gloves;
-                    maskStockCount = state.germany_inventory.mask - inputValues.mask;
-                    if (isPassportCountry == "uk") {
-                        state.shipping_charge -=
-                            (state.shipping_discount / 100) * state.shipping_charge;
+                    _a = (inputValues.gloves / 10).toString().split("."), base = _a[0], decimal = _a[1];
+                    reduceQuantityFromUk = parseInt(base) * 10;
+                    state.uk_inventory.gloves -= reduceQuantityFromUk;
+                    countTotel += reduceQuantityFromUk * state.uk_inventory.gloves_prise;
+                    shippingCharge = state.shipping_charge * parseInt(base);
+                    if (decimal != "NaN") {
+                        state.germany_inventory.gloves -= parseInt(decimal);
+                        countTotel += parseInt(decimal) * state.germany_inventory.gloves_prise;
                     }
-                    if (!(maskStockCount < 0)) return [3 /*break*/, 14];
-                    return [4 /*yield*/, getStock(Country.uk, maskStockCount, "mask")];
-                case 13:
-                    maskCount = _a.sent();
-                    state.germany_inventory.mask = 0;
-                    shippingCharge = state.shipping_charge;
-                    return [3 /*break*/, 15];
-                case 14:
-                    state.germany_inventory.mask = maskStockCount;
-                    _a.label = 15;
-                case 15:
-                    if (!(glovesStockCount < 0)) return [3 /*break*/, 17];
-                    return [4 /*yield*/, getStock(Country.uk, glovesStockCount, "gloves")];
-                case 16:
-                    glovesCount = _a.sent();
-                    console.log(glovesCount);
-                    state.germany_inventory.gloves = 0;
-                    shippingCharge = state.shipping_charge;
-                    return [3 /*break*/, 18];
-                case 17:
-                    state.germany_inventory.gloves = glovesStockCount;
-                    _a.label = 18;
-                case 18:
-                    glovesCount =
-                        glovesCount + inputValues.gloves * state.germany_inventory.gloves_prise;
-                    maskCount = maskCount + inputValues.mask * state.germany_inventory.mask_prise;
-                    state.sale_prise = glovesCount + maskCount + shippingCharge;
-                    console.log("Your Input ", inputValues);
-                    console.log("new state ", state);
+                    if (isPassportCountry == "uk") {
+                        shippingCharge =
+                            state.shipping_charge -
+                                (state.shipping_discount / 100) * state.shipping_charge;
+                        countTotel += state.uk_inventory.mask_prise * inputValues.mask;
+                        state.uk_inventory.mask -= inputValues.mask;
+                    }
+                    else {
+                        countTotel += state.germany_inventory.mask_prise * inputValues.mask;
+                        state.germany_inventory.mask -= inputValues.mask;
+                    }
+                    state.sale_prise = countTotel + shippingCharge;
                     console.log(state.sale_prise + ":" + state.uk_inventory.mask + ":" + state.germany_inventory.mask + " " + state.uk_inventory.gloves + ":" + state.germany_inventory.gloves);
-                    _a.label = 19;
-                case 19:
+                    _b.label = 13;
+                case 13:
                     readline.close();
                     return [2 /*return*/];
             }
