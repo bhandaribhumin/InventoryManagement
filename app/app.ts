@@ -13,14 +13,14 @@ interface stateType {
   uk_inventory: inventory;
   germany_inventory: inventory;
   shipping_charge: number;
-  sale_prise: number;
+  sale_price: number;
   shipping_discount: number;
 }
 interface inventory {
   mask: number;
   gloves: number;
-  mask_prise: number;
-  gloves_prise: number;
+  mask_price: number;
+  gloves_price: number;
 }
 const state: stateType | any = {
   country: Country.uk,
@@ -28,18 +28,18 @@ const state: stateType | any = {
   uk_inventory: {
     mask: 100,
     gloves: 100,
-    mask_prise: 65,
-    gloves_prise: 100,
+    mask_price: 65,
+    gloves_price: 100,
   },
   germany_inventory: {
     mask: 100,
     gloves: 50,
-    mask_prise: 100,
-    gloves_prise: 150,
+    mask_price: 100,
+    gloves_price: 150,
   },
   shipping_charge: 400,
   shipping_discount: 20,
-  sale_prise: 0,
+  sale_price: 0,
 };
 interface inputType {
   purchase_country: Country;
@@ -143,36 +143,36 @@ const initInput = () => {
       }
 
       glovesCount =
-        glovesCount + inputValues.gloves * state.uk_inventory.gloves_prise;
-      maskCount = maskCount + inputValues.mask * state.uk_inventory.mask_prise;
-      state.sale_prise = glovesCount + maskCount + shippingCharge;
+        glovesCount + inputValues.gloves * state.uk_inventory.gloves_price;
+      maskCount = maskCount + inputValues.mask * state.uk_inventory.mask_price;
+      state.sale_price = glovesCount + maskCount + shippingCharge;
       console.log(
-        `${state.sale_prise}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
+        `${state.sale_price}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
       );
     } else {
       //germany
       let [base, decimal] = (inputValues.gloves / 10).toString().split(".");
       const reduceQuantityFromUk = parseInt(base) * 10;
       state.uk_inventory.gloves -= reduceQuantityFromUk;
-      countTotel += reduceQuantityFromUk * state.uk_inventory.gloves_prise;
+      countTotel += reduceQuantityFromUk * state.uk_inventory.gloves_price;
       shippingCharge = state.shipping_charge * parseInt(base);
       if (decimal != "NaN") {
         state.germany_inventory.gloves -= parseInt(decimal);
-        countTotel += parseInt(decimal) * state.germany_inventory.gloves_prise;
+        countTotel += parseInt(decimal) * state.germany_inventory.gloves_price;
       }
       if (isPassportCountry == "uk") {
         shippingCharge =
           state.shipping_charge -
           (state.shipping_discount / 100) * state.shipping_charge;
-        countTotel += state.uk_inventory.mask_prise * inputValues.mask;
+        countTotel += state.uk_inventory.mask_price * inputValues.mask;
         state.uk_inventory.mask -= inputValues.mask;
       } else {
-        countTotel += state.germany_inventory.mask_prise * inputValues.mask;
+        countTotel += state.germany_inventory.mask_price * inputValues.mask;
         state.germany_inventory.mask -= inputValues.mask;
       }
-      state.sale_prise = countTotel + shippingCharge;
+      state.sale_price = countTotel + shippingCharge;
       console.log(
-        `${state.sale_prise}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
+        `${state.sale_price}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
       );
     }
     readline.close();
@@ -189,7 +189,7 @@ const getStock = (
   const countryInventory = `${country}_inventory`;
   const remainingStock = Math.abs(stockCount);
   state[countryInventory][type] -= remainingStock;
-  count = state[countryInventory][`${type}_prise`] * remainingStock;
+  count = state[countryInventory][`${type}_price`] * remainingStock;
   inputValues[type] -= remainingStock;
   state.shipping_charge *= Math.ceil(remainingStock / 10);
   return count;
