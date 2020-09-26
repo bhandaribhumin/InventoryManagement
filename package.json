@@ -1,0 +1,16 @@
+{
+  "name": "inventorymanagement",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.ts",
+  "scripts": {
+    "start": "tsc && node ./app/app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/readline-sync": "^1.4.3",
+    "readline": "^1.3.0",
+    "typescript": "^4.0.3"
+  }
+}
