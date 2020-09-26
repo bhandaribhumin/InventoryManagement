@@ -77,7 +77,6 @@ const initInput = () => {
     let maskCount = 0;
     let countTotel = 0;
     const allInputs = input.replace(/\s/g, "").split(":");
-    console.log(allInputs);
     if (allInputs.length <= 4) {
       console.log("!ERROR!Input Not Possible");
       initInput();
@@ -92,9 +91,6 @@ const initInput = () => {
       isPassportCountry = await checkCountryPassport(passportNumber);
       inputValues.passport_country = isPassportCountry;
     }
-    console.log(inputValues.purchase_country);
-    console.log(inputValues.purchase_country in Country);
-
     if (!(inputValues.purchase_country in Country)) {
       console.log("Country not valid!");
       initInput();
