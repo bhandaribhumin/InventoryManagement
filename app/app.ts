@@ -53,7 +53,11 @@ const inputValues: inputType | any = {
   mask: 0,
   gloves: 0,
 };
-
+interface calculateStockFromOtherCountry {
+  getStock: number;
+  price: number;
+  shipping: number;
+}
 const UKPassportExp = /^[Bb][0-9]{3}[a-zA-Z]{2}[a-zA-Z0-9]{7}$/g;
 const GermanyPassportExp = /^[Aa][a-zA-Z]{2}[a-zA-Z0-9]{9}$/g;
 console.log("current Stock");
@@ -79,8 +83,16 @@ console.log("discountShippingPrice", discountedShippingPrice);
 const initInput = () => {
   console.log("Enter Input: ");
   readline.question("", async (input: any) => {
-    let glovesCount = 0;
-    let maskCount = 0;
+    let calculateGlovesStock: calculateStockFromOtherCountry = {
+      getStock: 0,
+      price: 0,
+      shipping: 0,
+    };
+    let calculateMaskStock: calculateStockFromOtherCountry = {
+      getStock: 0,
+      price: 0,
+      shipping: 0,
+    };
     let countTotel = 0;
     const allInputs = input.replace(/\s/g, "").split(":");
     if (allInputs.length <= 4) {
@@ -119,39 +131,38 @@ const initInput = () => {
       return;
     }
     if (inputValues.purchase_country == "uk") {
-      const checkOutofStock =
-        Math.sign(totalMaskStock - inputValues.gloves) -
-        Math.sign(state.germany_inventory.mask - inputValues.mask);
       const glovesStockCount: number =
         state.uk_inventory.gloves - inputValues.gloves;
       const maskStockCount: number = state.uk_inventory.mask - inputValues.mask;
       if (isPassportCountry == "germany") {
-        state.shipping_charge -=
-          (state.shipping_discount / 100) * state.shipping_charge;
+        state.shipping_charge = discountedShippingPrice;
       }
       if (maskStockCount < 0) {
-        maskCount = await getStock(Country.germany, maskStockCount, "mask");
+        calculateMaskStock = await getStock(
+          Country.germany,
+          maskStockCount,
+          "mask"
+        );
         state.uk_inventory.mask = 0;
-        shippingCharge = state.shipping_charge;
+        shippingCharge = calculateMaskStock.price + calculateMaskStock.shipping;
       } else {
         state.uk_inventory.mask = maskStockCount;
       }
       if (glovesStockCount < 0) {
-        glovesCount = await getStock(
+        calculateGlovesStock = await getStock(
           Country.germany,
           glovesStockCount,
           "gloves"
         );
         state.uk_inventory.gloves = 0;
-        shippingCharge = state.shipping_charge;
+        shippingCharge =
+          calculateGlovesStock.price + calculateGlovesStock.shipping;
       } else {
         state.uk_inventory.gloves = glovesStockCount;
       }
-
-      glovesCount =
-        glovesCount + inputValues.gloves * state.uk_inventory.gloves_price;
-      maskCount = maskCount + inputValues.mask * state.uk_inventory.mask_price;
-      state.sale_price = glovesCount + maskCount + shippingCharge;
+      const glovesTotel = inputValues.gloves * state.uk_inventory.gloves_price;
+      const maskTotel = inputValues.mask * state.uk_inventory.mask_price;
+      state.sale_price = glovesTotel + maskTotel + shippingCharge;
       console.log(
         `${state.sale_price}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
       );
@@ -167,8 +178,8 @@ const initInput = () => {
       console.log("mQtyP", parseInt(mQty));
       console.log("glovesRemaining", glovesRemaining);
       console.log("maskRemaining", maskRemaining);
-      const glovesQty = parseInt(gQty) * 10;
-      const maskQty = parseInt(mQty) * 10;
+      let glovesQty = parseInt(gQty) * 10;
+      let maskQty = parseInt(mQty) * 10;
 
       state.uk_inventory.gloves -= glovesQty;
       if (isPassportCountry == "uk") {
@@ -179,7 +190,41 @@ const initInput = () => {
         shippingCharge += discountedShippingPrice * parseInt(mQty);
       } else {
         state.germany_inventory.mask -= maskQty;
+        console.log(
+          "state.germany_inventory.mask",
+          state.germany_inventory.mask
+        );
+        if (state.germany_inventory.mask < 0) {
+          console.log("mask get from UK", maskQty);
+          calculateMaskStock = await getStock(
+            Country.uk,
+            state.germany_inventory.mask,
+            "mask"
+          );
+          console.log("maskCount", calculateMaskStock);
+          countTotel += calculateMaskStock.price;
+          shippingCharge += calculateMaskStock.shipping;
+          state.germany_inventory.mask = 0;
+          maskQty = maskQty - calculateMaskStock.getStock;
+        }
+
+        // iF uk gloves is outogstock then get stock from
+        if (state.uk_inventory.gloves < 0) {
+          console.log("mask get from UK", maskQty);
+          calculateGlovesStock = await getStock(
+            Country.germany,
+            state.uk_inventory.gloves,
+            "gloves"
+          );
+          console.log("maskCount", calculateMaskStock);
+          countTotel += calculateGlovesStock.price;
+          shippingCharge += calculateGlovesStock.shipping;
+          state.uk_inventory.gloves = 0;
+          glovesQty = glovesQty - calculateGlovesStock.getStock;
+        }
         countTotel += maskQty * state.germany_inventory.mask_price;
+
+        //if quantity is
         countTotel += glovesQty * state.uk_inventory.gloves_price;
         shippingCharge += state.shipping_charge * parseInt(gQty);
       }
@@ -198,8 +243,6 @@ const initInput = () => {
         //console.log('Count Price RemainingQty germany_inventory mask ',remainingQty * state.germany_inventory.mask_price);
       }
 
-
-      
       state.sale_price = countTotel + shippingCharge;
       console.log(
         `${state.sale_price}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
@@ -213,15 +256,21 @@ const getStock = (
   country: Country,
   stockCount: number,
   type: string
-): number => {
+): calculateStockFromOtherCountry => {
   let count = 0;
   const countryInventory = `${country}_inventory`;
   const remainingStock = Math.abs(stockCount);
   state[countryInventory][type] -= remainingStock;
   count = state[countryInventory][`${type}_price`] * remainingStock;
   inputValues[type] -= remainingStock;
-  state.shipping_charge *= Math.ceil(remainingStock / 10);
-  return count;
+  const shipping = state.shipping_charge * Math.ceil(remainingStock / 10);
+  const calculateStock: calculateStockFromOtherCountry = {
+    getStock: state[countryInventory][type],
+    price: count,
+    shipping,
+  };
+  console.log("calculateStock", calculateStock);
+  return calculateStock;
 };
 /*
   Return inputType
