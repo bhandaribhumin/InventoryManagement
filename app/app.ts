@@ -172,61 +172,74 @@ const initInput = () => {
         .toString()
         .split(".");
       let [mQty, maskRemaining] = (inputValues.mask / 10).toString().split(".");
-      console.log("gQty", gQty);
-      console.log("mQty", mQty);
-      console.log("gQtyP", parseInt(gQty));
-      console.log("mQtyP", parseInt(mQty));
+      let reduceShippingQtygQty = parseInt(gQty);
+      let reduceShippingQtymQty = parseInt(mQty);
+      console.log("gQtyP", reduceShippingQtygQty);
+      console.log("mQtyP", reduceShippingQtymQty);
       console.log("glovesRemaining", glovesRemaining);
       console.log("maskRemaining", maskRemaining);
-      let glovesQty = parseInt(gQty) * 10;
-      let maskQty = parseInt(mQty) * 10;
+      let glovesQty = reduceShippingQtygQty * 10;
+      let maskQty = reduceShippingQtymQty * 10;
 
       state.uk_inventory.gloves -= glovesQty;
+      console.log('countity minus from state.uk_inventory.gloves',state.uk_inventory.gloves);
       if (isPassportCountry == "uk") {
         state.uk_inventory.mask -= maskQty;
         countTotel += maskQty * state.uk_inventory.mask_price;
         countTotel += glovesQty * state.uk_inventory.gloves_price;
-        shippingCharge = discountedShippingPrice * parseInt(gQty);
-        shippingCharge += discountedShippingPrice * parseInt(mQty);
+        shippingCharge = discountedShippingPrice * reduceShippingQtygQty;
+        shippingCharge += discountedShippingPrice * reduceShippingQtymQty;
       } else {
+
         state.germany_inventory.mask -= maskQty;
-        console.log(
-          "state.germany_inventory.mask",
-          state.germany_inventory.mask
-        );
+        console.log('passport country not UK mask minus from uk',state.germany_inventory.mask);
+
         if (state.germany_inventory.mask < 0) {
+          console.log("mask stock over in germany ");
           console.log("mask get from UK", maskQty);
           calculateMaskStock = await getStock(
             Country.uk,
             state.germany_inventory.mask,
             "mask"
           );
-          console.log("maskCount", calculateMaskStock);
+          console.log("calculateMaskStock", calculateMaskStock);
           countTotel += calculateMaskStock.price;
+          console.log('calculateMaskStock.price',countTotel);
           shippingCharge += calculateMaskStock.shipping;
+          console.log('add shippingCharge',shippingCharge);
           state.germany_inventory.mask = 0;
+          console.log('mask quantity 0 from germany inventory ',state.germany_inventory.mask);
           maskQty = maskQty - calculateMaskStock.getStock;
+          console.log('calculate mask quantity reduce from germany',maskQty);
+          
+          //reduceShippingQtymQty =  0;
+          //console.log('all charges counted from uk no need to charge shipping for mask germany inventory',reduceShippingQtymQty);
         }
 
-        // iF uk gloves is outogstock then get stock from
+        // iF uk gloves is outogstock then get gloves from germany
         if (state.uk_inventory.gloves < 0) {
-          console.log("mask get from UK", maskQty);
+          console.log("gloves get from UK", glovesQty);
           calculateGlovesStock = await getStock(
             Country.germany,
             state.uk_inventory.gloves,
             "gloves"
           );
-          console.log("maskCount", calculateMaskStock);
+          console.log("calculateGlovesStock", calculateGlovesStock);
           countTotel += calculateGlovesStock.price;
           shippingCharge += calculateGlovesStock.shipping;
           state.uk_inventory.gloves = 0;
           glovesQty = glovesQty - calculateGlovesStock.getStock;
+         // reduceShippingQtyFromOther =  Math.floor(calculateGlovesStock.getStock / 10);
+         // console.log('reduceShippingQtyFromOthergloves',reduceShippingQtyFromOther);
         }
-        countTotel += maskQty * state.germany_inventory.mask_price;
-
+        console.log('maskQty',maskQty);
+        countTotel += (maskQty * state.germany_inventory.mask_price);
+        console.log('maskQty mask_price',(maskQty * state.germany_inventory.mask_price));
+        console.log(' glovesQty',glovesQty," +glovesQty ",(glovesQty * state.uk_inventory.gloves_price));
+        //console.log(' state.shipping_charge',state.shipping_charge," +reduceShippingQtyFromOther ",(state.shipping_charge * reduceShippingQtyFromOther));
         //if quantity is
-        countTotel += glovesQty * state.uk_inventory.gloves_price;
-        shippingCharge += state.shipping_charge * parseInt(gQty);
+        countTotel += (glovesQty * state.uk_inventory.gloves_price);
+        shippingCharge += (state.shipping_charge * reduceShippingQtygQty);
       }
       if (glovesRemaining != undefined) {
         const remainingQty = parseInt(glovesRemaining);

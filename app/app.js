@@ -94,7 +94,7 @@ console.log("discountShippingPrice", discountedShippingPrice);
 var initInput = function () {
     console.log("Enter Input: ");
     readline.question("", function (input) { return __awaiter(void 0, void 0, void 0, function () {
-        var calculateGlovesStock, calculateMaskStock, countTotel, allInputs, passportNumber, shippingCharge, totalMaskStock, totalGlovesStock, outOfStock, glovesStockCount, maskStockCount, glovesTotel, maskTotel, _a, gQty, glovesRemaining, _b, mQty, maskRemaining, glovesQty, maskQty, remainingQty, remainingQty;
+        var calculateGlovesStock, calculateMaskStock, countTotel, allInputs, passportNumber, shippingCharge, totalMaskStock, totalGlovesStock, outOfStock, glovesStockCount, maskStockCount, glovesTotel, maskTotel, _a, gQty, glovesRemaining, _b, mQty, maskRemaining, reduceShippingQtygQty, reduceShippingQtymQty, glovesQty, maskQty, remainingQty, remainingQty;
         return __generator(this, function (_c) {
             switch (_c.label) {
                 case 0:
@@ -168,7 +168,8 @@ var initInput = function () {
                 case 9:
                     calculateGlovesStock = _c.sent();
                     state.uk_inventory.gloves = 0;
-                    shippingCharge = calculateGlovesStock.price + calculateGlovesStock.shipping;
+                    shippingCharge =
+                        calculateGlovesStock.price + calculateGlovesStock.shipping;
                     return [3 /*break*/, 11];
                 case 10:
                     state.uk_inventory.gloves = glovesStockCount;
@@ -178,48 +179,75 @@ var initInput = function () {
                     maskTotel = inputValues.mask * state.uk_inventory.mask_price;
                     state.sale_price = glovesTotel + maskTotel + shippingCharge;
                     console.log(state.sale_price + ":" + state.uk_inventory.mask + ":" + state.germany_inventory.mask + " " + state.uk_inventory.gloves + ":" + state.germany_inventory.gloves);
-                    return [3 /*break*/, 17];
+                    return [3 /*break*/, 19];
                 case 12:
                     _a = (inputValues.gloves / 10)
                         .toString()
                         .split("."), gQty = _a[0], glovesRemaining = _a[1];
                     _b = (inputValues.mask / 10).toString().split("."), mQty = _b[0], maskRemaining = _b[1];
+                    reduceShippingQtygQty = parseInt(gQty);
+                    reduceShippingQtymQty = parseInt(mQty);
                     console.log("gQty", gQty);
                     console.log("mQty", mQty);
                     console.log("gQtyP", parseInt(gQty));
                     console.log("mQtyP", parseInt(mQty));
                     console.log("glovesRemaining", glovesRemaining);
                     console.log("maskRemaining", maskRemaining);
-                    glovesQty = parseInt(gQty) * 10;
-                    maskQty = parseInt(mQty) * 10;
+                    glovesQty = reduceShippingQtygQty * 10;
+                    maskQty = reduceShippingQtymQty * 10;
                     state.uk_inventory.gloves -= glovesQty;
+                    console.log('countity minus from state.uk_inventory.gloves', state.uk_inventory.gloves);
                     if (!(isPassportCountry == "uk")) return [3 /*break*/, 13];
                     state.uk_inventory.mask -= maskQty;
                     countTotel += maskQty * state.uk_inventory.mask_price;
                     countTotel += glovesQty * state.uk_inventory.gloves_price;
-                    shippingCharge = discountedShippingPrice * parseInt(gQty);
-                    shippingCharge += discountedShippingPrice * parseInt(mQty);
-                    return [3 /*break*/, 16];
+                    shippingCharge = discountedShippingPrice * reduceShippingQtygQty;
+                    shippingCharge += discountedShippingPrice * reduceShippingQtymQty;
+                    return [3 /*break*/, 18];
                 case 13:
                     state.germany_inventory.mask -= maskQty;
-                    console.log("state.germany_inventory.mask", state.germany_inventory.mask);
+                    console.log('passport country not UK mask minus from uk', state.germany_inventory.mask);
                     if (!(state.germany_inventory.mask < 0)) return [3 /*break*/, 15];
+                    console.log("mask stock over in germany ");
                     console.log("mask get from UK", maskQty);
                     return [4 /*yield*/, getStock(Country.uk, state.germany_inventory.mask, "mask")];
                 case 14:
                     calculateMaskStock = _c.sent();
-                    console.log("maskCount", calculateMaskStock);
+                    console.log("calculateMaskStock", calculateMaskStock);
                     countTotel += calculateMaskStock.price;
+                    console.log('calculateMaskStock.price', countTotel);
                     shippingCharge += calculateMaskStock.shipping;
+                    console.log('add shippingCharge', shippingCharge);
                     state.germany_inventory.mask = 0;
+                    console.log('mask quantity 0 from germany inventory ', state.germany_inventory.mask);
                     maskQty = maskQty - calculateMaskStock.getStock;
+                    console.log('calculate mask quantity reduce from germany', maskQty);
+                    reduceShippingQtymQty = 0;
+                    console.log('all charges counted from uk no need to charge shipping for mask germany inventory', reduceShippingQtymQty);
                     _c.label = 15;
                 case 15:
-                    countTotel += maskQty * state.germany_inventory.mask_price;
-                    countTotel += glovesQty * state.uk_inventory.gloves_price;
-                    shippingCharge += state.shipping_charge * parseInt(gQty);
-                    _c.label = 16;
+                    if (!(state.uk_inventory.gloves < 0)) return [3 /*break*/, 17];
+                    console.log("gloves get from UK", glovesQty);
+                    return [4 /*yield*/, getStock(Country.germany, state.uk_inventory.gloves, "gloves")];
                 case 16:
+                    calculateGlovesStock = _c.sent();
+                    console.log("calculateGlovesStock", calculateGlovesStock);
+                    countTotel += calculateGlovesStock.price;
+                    shippingCharge += calculateGlovesStock.shipping;
+                    state.uk_inventory.gloves = 0;
+                    glovesQty = glovesQty - calculateGlovesStock.getStock;
+                    _c.label = 17;
+                case 17:
+                    console.log('maskQty', maskQty);
+                    countTotel += (maskQty * state.germany_inventory.mask_price);
+                    console.log('maskQty mask_price', (maskQty * state.germany_inventory.mask_price));
+                    console.log(' glovesQty', glovesQty, " +glovesQty ", (glovesQty * state.uk_inventory.gloves_price));
+                    //console.log(' state.shipping_charge',state.shipping_charge," +reduceShippingQtyFromOther ",(state.shipping_charge * reduceShippingQtyFromOther));
+                    //if quantity is
+                    countTotel += (glovesQty * state.uk_inventory.gloves_price);
+                    shippingCharge += (state.shipping_charge * reduceShippingQtygQty);
+                    _c.label = 18;
+                case 18:
                     if (glovesRemaining != undefined) {
                         remainingQty = parseInt(glovesRemaining);
                         state.germany_inventory.gloves -= remainingQty;
@@ -236,8 +264,8 @@ var initInput = function () {
                     }
                     state.sale_price = countTotel + shippingCharge;
                     console.log(state.sale_price + ":" + state.uk_inventory.mask + ":" + state.germany_inventory.mask + " " + state.uk_inventory.gloves + ":" + state.germany_inventory.gloves);
-                    _c.label = 17;
-                case 17:
+                    _c.label = 19;
+                case 19:
                     readline.close();
                     return [2 /*return*/];
             }
@@ -258,7 +286,7 @@ var getStock = function (country, stockCount, type) {
         price: count,
         shipping: shipping,
     };
-    console.log('calculateStock', calculateStock);
+    console.log("calculateStock", calculateStock);
     return calculateStock;
 };
 /*
