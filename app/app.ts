@@ -74,6 +74,11 @@ console.log("Example Inputs:\n", "UK:Gloves:50:Mask:150");
 console.log("Example Output:\n", "18500:0:50 50:50");
 console.log("Example Inputs:\n", "UK:Gloves:250:Mask:150");
 console.log("Example Output:\n", "OUT OF STOCK:100:100 100:50");
+console.log("Example Inputs:\n", "Germany:B123AB1234567:Gloves:25:Mask:150");
+console.log("Example Output:\n", "18090:0:50 80:45");
+console.log("Example Inputs:\n", "Germany:AAB123456789:Gloves:25:Mask:150");
+console.log("Example Output:\n", "18800:50:0 80:45");
+
 
 let isPassportCountry: Country | undefined = undefined;
 const discountedShippingPrice =
@@ -185,10 +190,43 @@ const initInput = () => {
       console.log('countity minus from state.uk_inventory.gloves',state.uk_inventory.gloves);
       if (isPassportCountry == "uk") {
         state.uk_inventory.mask -= maskQty;
-        countTotel += maskQty * state.uk_inventory.mask_price;
-        countTotel += glovesQty * state.uk_inventory.gloves_price;
-        shippingCharge = discountedShippingPrice * reduceShippingQtygQty;
-        shippingCharge += discountedShippingPrice * reduceShippingQtymQty;
+        if (state.uk_inventory.mask < 0) {
+          console.log("mask stock over in uk ",state.uk_inventory.mask);
+          console.log("mask get from UK", maskQty);
+          calculateMaskStock = await getStock(
+            Country.germany,
+            state.uk_inventory.mask,
+            "mask"
+          );
+
+          console.log("calculateMaskStockFromGermany", calculateMaskStock);
+          countTotel += calculateMaskStock.price;
+          console.log('calculateMaskStock.price',countTotel);
+          // NO Shipping Bez order country is germany
+          //shippingCharge += calculateMaskStock.shipping;
+          console.log('add shippingCharge',shippingCharge);
+          state.uk_inventory.mask = 0;
+          console.log('mask quantity 0 from germany inventory ',state.germany_inventory.mask);
+          maskQty = maskQty - calculateMaskStock.getStock;
+          console.log('calculate mask quantity reduce from UK',maskQty);
+          reduceShippingQtymQty  = Math.floor(maskQty / 10);
+          //reduceShippingQtymQty =  0;
+          //console.log('all charges counted from uk no need to charge shipping for mask germany inventory',reduceShippingQtymQty);
+        }
+
+        console.log('add uk_inventory mask count ',maskQty * state.uk_inventory.mask_price);
+        countTotel += (maskQty * state.uk_inventory.mask_price);
+        countTotel += (glovesQty * state.uk_inventory.gloves_price);
+        shippingCharge = (discountedShippingPrice * reduceShippingQtygQty);
+       
+        shippingCharge += (discountedShippingPrice * reduceShippingQtymQty);
+        console.log('add uk_inventory reduceShippingQtymQty ',(reduceShippingQtymQty));
+        console.log('add uk_inventory mask shippingCharge ',(discountedShippingPrice * reduceShippingQtymQty));
+        
+   
+
+
+
       } else {
 
         state.germany_inventory.mask -= maskQty;
@@ -261,6 +299,7 @@ const initInput = () => {
         `${state.sale_price}:${state.uk_inventory.mask}:${state.germany_inventory.mask} ${state.uk_inventory.gloves}:${state.germany_inventory.gloves}`
       );
     }
+    //initInput();
     readline.close();
   });
 };
