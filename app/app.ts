@@ -87,6 +87,11 @@ console.log("discountShippingPrice", discountedShippingPrice);
 const initInput = () => {
   console.log("Enter Input: ");
   readline.question("", async (input: any) => {
+    let [country, passport] = input.split(":").map((e: any) => e.toLowerCase());
+    input.split(":").map((obj: any, index: any, all: any) => {
+      if (obj.toLowerCase() == "gloves") inputValues.gloves = all[index + 1];
+      if (obj.toLowerCase() == "mask") inputValues.mask = all[index + 1];
+    });
     let calculateGlovesStock: calculateStockFromOtherCountry = {
       getStock: 0,
       price: 0,
@@ -104,15 +109,8 @@ const initInput = () => {
       initInput();
       return;
     }
-    inputValues.purchase_country = allInputs[0].toLowerCase();
-    const passportNumber = allInputs[1].toLowerCase();
-    isPassportCountry = await checkCountryPassport(passportNumber);
-    if (passportNumber.length <= 7) {
-      await bindInputsToState(allInputs, 1);
-    } else {
-      await bindInputsToState(allInputs, 2);
-      inputValues.passport_country = isPassportCountry;
-    }
+    inputValues.purchase_country = country;
+    if (passport) isPassportCountry = await checkCountryPassport(passport);
     if (!(inputValues.purchase_country in Country)) {
       console.log("Country not valid!");
       initInput();
@@ -178,10 +176,6 @@ const initInput = () => {
       let [mQty, maskRemaining] = (inputValues.mask / 10).toString().split(".");
       let reduceShippingQtygQty = parseInt(gQty);
       let reduceShippingQtymQty = parseInt(mQty);
-      console.log("gQtyP", reduceShippingQtygQty);
-      console.log("mQtyP", reduceShippingQtymQty);
-      console.log("glovesRemaining", glovesRemaining);
-      console.log("maskRemaining", maskRemaining);
       let glovesQty = reduceShippingQtygQty * 10;
       let maskQty = reduceShippingQtymQty * 10;
 
@@ -200,7 +194,7 @@ const initInput = () => {
           );
 
           countTotel += calculateMaskStock.price;
-          // NO Shipping Bez order country is germany
+          // NO Shipping Becz order country is germany
           //shippingCharge += calculateMaskStock.shipping;
           state.uk_inventory.mask = 0;
           maskQty = maskQty - calculateMaskStock.getStock;
@@ -215,7 +209,7 @@ const initInput = () => {
           );
 
           countTotel += calculateGlovesStock.price;
-          // NO Shipping Bez order country is germany
+          // NO Shipping Becz order country is germany
           //shippingCharge += calculateMaskStock.shipping;
           state.uk_inventory.gloves = 0;
           glovesQty = glovesQty - calculateGlovesStock.getStock;
@@ -293,21 +287,7 @@ const getStock = (
     price: count,
     shipping,
   };
-  console.log("calculateStock", calculateStock);
   return calculateStock;
-};
-/*
-  Return inputType
-  */
-const bindInputsToState = (inputs: string[], index: number): inputType => {
-  for (let i = index; i < inputs.length; i++) {
-    if (inputs[i].toLowerCase() == "gloves") {
-      inputValues.gloves = parseInt(inputs[i + 1]);
-    } else if (inputs[i].toLowerCase() == "mask") {
-      inputValues.mask = parseInt(inputs[i + 1]);
-    }
-  }
-  return inputValues;
 };
 /*
   Return {boolean} if true country is UK if false country is Germany
