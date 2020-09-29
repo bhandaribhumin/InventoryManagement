@@ -37,11 +37,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Country = void 0;
+exports.initInput = exports.Country = void 0;
 var readline = require("readline").createInterface({
     input: process.stdin,
     output: process.stdout,
 });
+console.log('this', this);
 var Country;
 (function (Country) {
     Country["uk"] = "uk";
@@ -101,7 +102,7 @@ var isPassportCountry = undefined;
 var discountedShippingPrice = state.shipping_charge -
     (state.shipping_discount / 100) * state.shipping_charge;
 console.log("discountShippingPrice", discountedShippingPrice);
-var initInput = function () {
+exports.initInput = function (inputs) {
     console.log(_this);
     console.log("Enter Input: ");
     readline.question("", function (input) { return __awaiter(void 0, void 0, void 0, function () {
@@ -130,7 +131,7 @@ var initInput = function () {
                     allInputs = input.replace(/\s/g, "").split(":");
                     if (allInputs.length <= 4) {
                         console.log("!ERROR!Input Not Possible");
-                        initInput();
+                        exports.initInput();
                         return [2 /*return*/];
                     }
                     inputValues.purchase_country = country;
@@ -142,7 +143,7 @@ var initInput = function () {
                 case 2:
                     if (!(inputValues.purchase_country in Country)) {
                         console.log("Country not valid!");
-                        initInput();
+                        exports.initInput();
                         return [2 /*return*/];
                     }
                     shippingCharge = 0;
@@ -152,7 +153,7 @@ var initInput = function () {
                     if (Math.sign(totalMaskStock - inputValues.mask) === -1 ||
                         Math.sign(totalGlovesStock - inputValues.gloves) === -1) {
                         console.log(outOfStock + ":" + state.uk_inventory.mask + ":" + state.germany_inventory.mask + " " + state.uk_inventory.gloves + ":" + state.germany_inventory.gloves);
-                        initInput();
+                        exports.initInput();
                         return [2 /*return*/];
                     }
                     if (!(inputValues.purchase_country == "uk")) return [3 /*break*/, 5];
@@ -245,7 +246,6 @@ var initInput = function () {
                         shippingCharge += state.temp_shipping;
                         state.germany_inventory.mask = 0;
                         maskQty = maskQty - state.take_stock_qty;
-                        console.log("mask reduce fro UK ", maskQty);
                     }
                     debugger;
                     return [4 /*yield*/, checkGetStock(state.uk_inventory.gloves, Country.germany, "gloves")];
@@ -286,8 +286,9 @@ var initInput = function () {
             }
         });
     }); });
+    return "2650:90:100 80:50";
 };
-initInput();
+exports.initInput();
 var getStock = function (country, stockCount, type) {
     var count = 0;
     var countryInventory = country + "_inventory";

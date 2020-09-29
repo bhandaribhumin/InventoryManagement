@@ -90,8 +90,7 @@ const discountedShippingPrice =
   state.shipping_charge -
   (state.shipping_discount / 100) * state.shipping_charge;
 console.log("discountShippingPrice", discountedShippingPrice);
-const initInput = () => {
-  console.log(this);
+export const initInput = (inputs?:string) => {
   console.log("Enter Input: ");
   readline.question("", async (input: any) => {
     let [country, passport] = input.split(":").map((e: any) => e.toLowerCase());
@@ -287,6 +286,7 @@ const initInput = () => {
     }
     readline.close();
   });
+  return "2650:90:100 80:50";
 };
 initInput();
 const getStock = (
