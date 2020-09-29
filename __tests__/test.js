@@ -1,8 +1,12 @@
 const { createInterface } = require('readline');
-const { inventory } = require('../app/app');
+const  initInput  = require('../app/app');
 // Creation of readline instance
-describe('', () => {
-    it('should returns  when an array is null', () => {
-        expect(fetchedIndexElement).toBe(-1);
+describe('check country input', () => {
+    
+    it('should returns uk when an array is null', () => {
+        const input  = "UK:B123AB1234567:Gloves:20:Mask:10";
+        const fetchedIndexElement = initInput(input);
+        //expect(fetchedIndexElement).toBe(-1);
     })
+  
 })
